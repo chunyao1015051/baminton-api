@@ -25,29 +25,33 @@ db.once("open", function () {
 app.post("/register", async (req, res) => {
   try {
     const { name, phone, category, isBringingRacket, score, group } = req.body;
+    const findUser = await User.findOne({ name });
+    if (findUser) {
+      return res.status(400).send("此姓名已報名，請登入");
+    }
     const user = new User({ name, phone, category, isBringingRacket, score, group });
     await user.save();
     res.status(201).send("User registered");
-  } catch (error) {
-    res.status(500).send(error);
+  } catch ({ message }) {
+    res.status(500).send(message);
   }
 });
 
 app.post("/login", async (req, res) => {
   try {
-    const { username, phone } = req.body;
-    const user = await User.findOne({ username, phone });
+    const { name, phone } = req.body;
+    const user = await User.findOne({ name, phone });
     if (!user) {
       return res.status(400).send("Invalid credentials");
     }
 
     const token = jwt.sign({ userId: user._id }, "your_jwt_secret");
     res.send({ token });
-  } catch (error) {
-    return res.status(500).send(error);
+  } catch ({ message }) {
+    return res.status(500).send(message);
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://220.135.155.96:${port}`);
+  console.log(`Server is running on http://127.0.0.1:${port}`);
 });
