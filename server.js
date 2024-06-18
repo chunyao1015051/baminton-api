@@ -22,6 +22,33 @@ db.once("open", function () {
   console.log("Connected to MongoDB");
 });
 
+const secret = "your_jwt_secret";
+
+// 中間件來解析和驗證 token
+const authenticateToken = (req, res, next) => {
+  const token = req.header("Authorization").replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).send("Access denied. No token provided.");
+  }
+
+  try {
+    const decoded = jwt.verify(token, secret);
+    req.user = decoded;
+    next();
+  } catch (ex) {
+    res.status(400).send("Invalid token.");
+  }
+};
+
+// 使用中間件的範例路由
+app.get("/protected", authenticateToken, (req, res) => {
+  res.send(req);
+});
+
+app.get("/connectTest", async (req, res) => {
+  res.status(200).send();
+});
+
 app.post("/register", async (req, res) => {
   try {
     const { name, phone, category, isBringingRacket, score, group } = req.body;
