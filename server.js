@@ -34,14 +34,18 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const { username, phone } = req.body;
-  const user = await User.findOne({ username, phone });
-  if (!user) {
-    return res.status(400).send("Invalid credentials");
-  }
+  try {
+    const { username, phone } = req.body;
+    const user = await User.findOne({ username, phone });
+    if (!user) {
+      return res.status(400).send("Invalid credentials");
+    }
 
-  const token = jwt.sign({ userId: user._id }, "your_jwt_secret");
-  res.send({ token });
+    const token = jwt.sign({ userId: user._id }, "your_jwt_secret");
+    res.send({ token });
+  } catch (error) {
+    return res.status(500).send(error);
+  }
 });
 
 app.listen(port, () => {
