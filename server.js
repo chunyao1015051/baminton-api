@@ -52,6 +52,48 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.get("/getMemberGroupedData", async (req, res) => {
+  try {
+    // 聚合查詢，首先根據 category 分組，然後在每個 category 內根據 group 分組
+    const groupedData = await User.aggregate([
+      // 篩選 category 不為 "吃瓜"
+      { $match: { category: { $ne: "吃瓜" } } },
+      // 根據 category 分組
+      { $group: { _id: "$category", members: { $push: "$$ROOT" } } },
+      // 展開 members 數組
+      { $unwind: "$members" },
+      // 根據 category 和 group 進行二次分組
+      {
+        $group: {
+          _id: { category: "$_id", group: "$members.group" },
+          members: { $push: "$members" },
+        },
+      },
+      // 排序 group
+      { $sort: { "_id.group": 1 } },
+      // 重組輸出格式
+      {
+        $group: {
+          _id: "$_id.category",
+          groups: {
+            $push: {
+              group: "$_id.group",
+              members: "$members",
+            },
+          },
+        },
+      },
+      // 最後根據 category 排序
+      { $sort: { _id: 1 } },
+    ]);
+
+    console.log(groupedData);
+    res.send({ groupedData });
+  } catch ({ message }) {
+    return res.status(500).send(message);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on http://220.135.155.96:${port}`);
 });
