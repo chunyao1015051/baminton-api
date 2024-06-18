@@ -87,7 +87,6 @@ app.get("/getMemberGroupedData", async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    console.log(groupedData);
     res.send({ groupedData });
   } catch ({ message }) {
     return res.status(500).send(message);
