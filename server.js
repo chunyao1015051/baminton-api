@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 mongoose.connect(
-  "mongodb+srv://haruhitokyonsos:sKmUmTB1EHvVS0WG@cluster0.laygasp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  "mongodb+srv://haruhitokyonsos:sKmUmTB1EHvVS0WG@cluster0.laygasp.mongodb.net/Badminton?retryWrites=true&w=majority&appName=Cluster0"
 );
 
 const db = mongoose.connection;
