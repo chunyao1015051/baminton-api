@@ -117,7 +117,43 @@ app.post("/addQty", async (req, res) => {
   try {
     const { name, phone, category, group, qty } = req.body;
     const onlookers = new Onlookers({ name, phone, category, group, qty });
+
     await onlookers.save();
+    res.send();
+  } catch ({ message }) {
+    return res.status(500).send(message);
+  }
+});
+app.get("/getQtyData", async (req, res) => {
+  try {
+    const groupedData = await Onlookers.aggregate([
+      // 根據 category 和 group 進行分組
+      {
+        $group: {
+          _id: { category: "$category", group: "$group" },
+          totalQty: { $sum: "$qty" },
+          members: { $push: "$$ROOT" },
+        },
+      },
+      // 根據 category 和 group 進行排序
+      { $sort: { "_id.category": 1, "_id.group": 1 } },
+      // 將分組結果重組
+      {
+        $group: {
+          _id: "$_id.category",
+          groups: {
+            $push: {
+              group: "$_id.group",
+              totalQty: "$totalQty",
+              members: "$members",
+            },
+          },
+        },
+      },
+      // 最終結果根據 category 進行排序
+      { $sort: { _id: 1 } },
+    ]);
+    res.send(groupedData);
   } catch ({ message }) {
     return res.status(500).send(message);
   }
