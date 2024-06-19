@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const User = require("./models/User"); // 假設我們有個User模型
+const User = require("./models/User");
+const Onlookers = require("./models/Onlookers");
+const Status = require("./models/Status");
 
 const app = express();
 const port = 3001;
@@ -11,7 +13,6 @@ const port = 3001;
 // 使用 cors 中介軟體
 app.use(cors());
 app.use(express.json());
-
 mongoose.connect(
   "mongodb+srv://haruhitokyonsos:sKmUmTB1EHvVS0WG@cluster0.laygasp.mongodb.net/Badminton?retryWrites=true&w=majority&appName=Cluster0"
 );
@@ -22,27 +23,18 @@ db.once("open", function () {
   console.log("Connected to MongoDB");
 });
 
-const secret = "your_jwt_secret";
-
-// 中間件來解析和驗證 token
-const authenticateToken = (req, res, next) => {
-  const token = req.header("Authorization").replace("Bearer ", "");
-  if (!token) {
-    return res.status(401).send("Access denied. No token provided.");
-  }
-
+app.post("/getUserData", async (req, res) => {
   try {
-    const decoded = jwt.verify(token, secret);
-    req.user = decoded;
-    next();
-  } catch (ex) {
-    res.status(400).send("Invalid token.");
+    const { token } = req.body;
+    const decoded = jwt.verify(token, "your_jwt_secret");
+    const { userId } = decoded;
+    const user = await User.findOne({ _id: userId });
+    if (user) {
+      return res.send(user);
+    }
+  } catch ({ message }) {
+    res.status(500).send(message);
   }
-};
-
-// 使用中間件的範例路由
-app.get("/protected", authenticateToken, (req, res) => {
-  res.send(req);
 });
 
 app.get("/connectTest", async (req, res) => {
@@ -115,6 +107,17 @@ app.get("/getMemberGroupedData", async (req, res) => {
     ]);
 
     res.send({ groupedData });
+  } catch ({ message }) {
+    return res.status(500).send(message);
+  }
+});
+
+// 新增瓜量
+app.post("/addQty", async (req, res) => {
+  try {
+    const { name, phone, category, group, qty } = req.body;
+    const onlookers = new Onlookers({ name, phone, category, group, qty });
+    await onlookers.save();
   } catch ({ message }) {
     return res.status(500).send(message);
   }

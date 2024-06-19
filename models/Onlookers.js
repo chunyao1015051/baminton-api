@@ -4,9 +4,8 @@ const schema = new mongoose.Schema({
   name: String,
   phone: String,
   category: String,
-  isBringingRacket: String,
-  score: Number,
   group: String,
+  qty: Number,
 });
 
-module.exports = mongoose.model("User", schema);
+module.exports = mongoose.model("Onlookers", schema);
