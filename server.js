@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const User = require("./models/User");
 const Onlookers = require("./models/Onlookers");
 const Status = require("./models/Status");
+const Scores = require("./models/Scores");
+const Standings = require("./models/Standings");
 
 const app = express();
 const port = 3001;
@@ -157,6 +159,42 @@ app.get("/getQtyData", async (req, res) => {
   } catch ({ message }) {
     return res.status(500).send(message);
   }
+});
+
+app.get("/getScores/:category", async (req, res) => {
+  try {
+    const category = req.params.category;
+    const scores = await Scores.find({ category }).sort({ group_one: 1, group_two: 1 });
+
+    res.send(scores);
+  } catch ({ message }) {
+    res.status(500).send(message);
+  }
+});
+
+app.get("/getStandings/:category", async (req, res) => {
+  try {
+    const category = req.params.category;
+    const standings = await Standings.find({ category }).sort({ group: 1, scores: -1 });
+    res.send(standings);
+  } catch ({ message }) {
+    res.status(500).send(message);
+  }
+});
+
+app.post("/updateScores/:category", async (req, res) => {
+  const category = req.params.category;
+
+  const { group_one, group_two, winer, loser, result } = req.body;
+  await Scores.updateOne(
+    { category, group_one, group_two }, // 匹配條件
+    { $set: { result, winer, loser } } // 更新內容
+  );
+
+  await Standings.updateOne(
+    { category, group_one, group_two }, // 匹配條件
+    { $set: { result, winer, loser } } // 更新內容
+  );
 });
 
 app.listen(port, () => {
