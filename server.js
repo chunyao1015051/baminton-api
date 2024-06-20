@@ -175,7 +175,7 @@ app.get("/getScores/:category", async (req, res) => {
 app.get("/getStandings/:category", async (req, res) => {
   try {
     const category = req.params.category;
-    const standings = await Standings.find({ category }).sort({ group: 1, scores: -1 });
+    const standings = await Standings.find({ category }).sort({ scores: -1, group: 1 });
     res.send(standings);
   } catch ({ message }) {
     res.status(500).send(message);
@@ -185,16 +185,36 @@ app.get("/getStandings/:category", async (req, res) => {
 app.post("/updateScores/:category", async (req, res) => {
   const category = req.params.category;
 
-  const { group_one, group_two, winer, loser, result } = req.body;
-  await Scores.updateOne(
-    { category, group_one, group_two }, // 匹配條件
-    { $set: { result, winer, loser } } // 更新內容
-  );
+  const { group_one, group_two, group_one_scores, group_two_scores } = req.body;
+  try {
+    await Scores.updateOne({ category, group_one, group_two }, { $set: { group_one_scores, group_two_scores } });
 
-  await Standings.updateOne(
-    { category, group_one, group_two }, // 匹配條件
-    { $set: { result, winer, loser } } // 更新內容
-  );
+    const standingsGroupOne = await Standings.findOne({ category, group: group_one });
+    const standingsGroupTwo = await Standings.findOne({ category, group: group_two });
+    await Standings.updateOne(
+      { category, group: group_one },
+      {
+        $set: {
+          win: group_one_scores > group_two_scores ? standingsGroupOne.win + 1 : standingsGroupOne.win,
+          lose: group_one_scores > group_two_scores ? standingsGroupOne.lose : standingsGroupOne.lose + 1,
+          scores: group_one_scores > group_two_scores ? standingsGroupOne.scores + 3 : standingsGroupOne.scores,
+        },
+      }
+    );
+    await Standings.updateOne(
+      { category, group: group_two },
+      {
+        $set: {
+          win: group_two_scores > group_one_scores ? standingsGroupTwo.win + 1 : standingsGroupTwo.win,
+          lose: group_two_scores > group_one_scores ? standingsGroupTwo.lose : standingsGroupTwo.lose + 1,
+          scores: group_two_scores > group_one_scores ? standingsGroupTwo.scores + 3 : standingsGroupTwo.scores,
+        },
+      }
+    );
+    res.send();
+  } catch ({ message }) {
+    res.status(500).send(message);
+  }
 });
 
 app.listen(port, () => {

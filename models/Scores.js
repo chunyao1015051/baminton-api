@@ -4,9 +4,8 @@ const schema = new mongoose.Schema({
   category: String,
   group_one: String,
   group_two: String,
-  result: String,
-  winer: String,
-  loser: String,
+  group_one_scores: Number,
+  group_two_scores: Number,
 });
 
 module.exports = mongoose.model("Scores", schema);
