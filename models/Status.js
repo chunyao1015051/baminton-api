@@ -1,11 +1,11 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const schema = new mongoose.Schema({
   category: String,
   nowLeft: String,
-  newRight: String,
-  NextLeft: String,
-  NextRight: String,
+  nowRight: String,
+  nextLeft: String,
+  nextRight: String,
 });
 
-module.exports = mongoose.model("Status", schema);
+module.exports = mongoose.model('Status', schema);
