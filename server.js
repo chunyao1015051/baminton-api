@@ -118,14 +118,17 @@ app.get('/getMemberGroupedData', async (req, res) => {
 app.post('/addQty', async (req, res) => {
   try {
     const { name, phone, category, group, qty } = req.body;
-    const dbOnlookers = await Onlookers.findOne({name, phone, category, group})
+    if (!name) {
+      return res.status(500).send('名字空白，請找James或Mega處理！');
+    }
+    const dbOnlookers = await Onlookers.findOne({ name, phone, category, group });
     if (dbOnlookers) {
       await Onlookers.updateOne({ name, phone, category, group }, { $set: { qty: dbOnlookers.qty + qty } });
     } else {
       const onlookers = new Onlookers({ name, phone, category, group, qty });
       await onlookers.save();
     }
-    
+
     res.send();
   } catch ({ message }) {
     return res.status(500).send(message);
@@ -202,7 +205,10 @@ app.post('/updateScores/:category', async (req, res) => {
 
   const { group_one, group_two, group_one_scores, group_two_scores } = req.body;
   try {
-    const response =  await Scores.updateOne({ category, group_one, group_two }, { $set: { group_one_scores, group_two_scores } });
+    const response = await Scores.updateOne(
+      { category, group_one, group_two },
+      { $set: { group_one_scores, group_two_scores } }
+    );
     if (!response.modifiedCount) {
       const scores = new Scores({ category, group_one, group_two, group_one_scores, group_two_scores });
       await scores.save();
